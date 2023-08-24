@@ -5,10 +5,20 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from '../users/users.module';
+import { GoogleStrategy } from './google.strategy';
+import { JwtModule } from '@nestjs/jwt';
+import { JwtStrategy } from './jwt.strategy';
+import { KakaoStrategy } from './kakao.strategy';
 
 @Module({
-	imports: [PrismaModule, PassportModule, ConfigModule, UsersModule],
+	imports: [
+		PrismaModule,
+		PassportModule,
+		ConfigModule,
+		UsersModule,
+		JwtModule.register({}),
+	],
 	controllers: [AuthController],
-	providers: [AuthService],
+	providers: [AuthService, GoogleStrategy, KakaoStrategy, JwtStrategy],
 })
 export class AuthModule {}

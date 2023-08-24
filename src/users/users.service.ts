@@ -1,9 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
-
-import * as bcrypt from 'bcrypt';
 
 export const roundsOfHashing = 10;
 
@@ -12,49 +10,51 @@ export class UsersService {
 	constructor(private prisma: PrismaService) {}
 
 	async create(createUserDto: CreateUserDto) {
-		createUserDto.password = await bcrypt.hash(
-			createUserDto.password,
-			roundsOfHashing,
-		);
+		if (
+			await this.prisma.user.findUnique({
+				where: { email: createUserDto.email },
+			})
+		) {
+			throw new ConflictException('이미 존재하는 이메일입니다.');
+		}
 
 		return this.prisma.user.create({
 			data: createUserDto,
 		});
 	}
 
-	findAll() {
+	async findAll() {
 		return this.prisma.user.findMany();
 	}
 
-	findOne(id: number) {
+	async findOne(id: number) {
 		return this.prisma.user.findUnique({
 			where: { id },
 		});
 	}
 
 	async update(id: number, updateUserDto: UpdateUserDto) {
-		if (updateUserDto.password) {
-			updateUserDto.password = await bcrypt.hash(
-				updateUserDto.password,
-				roundsOfHashing,
-			);
-		}
-
 		return this.prisma.user.update({
 			where: { id },
 			data: updateUserDto,
 		});
 	}
 
-	remove(id: number) {
+	async remove(id: number) {
 		return this.prisma.user.delete({
 			where: { id },
 		});
 	}
 
-	findUserByUsername(username: string) {
+	async findByProviderId(providerId: string) {
 		return this.prisma.user.findUnique({
-			where: { username },
+			where: { providerId },
+		});
+	}
+
+	async findByRefreshToken(refreshToken: string) {
+		return this.prisma.user.findUnique({
+			where: { hashedRefreshToken: refreshToken },
 		});
 	}
 }

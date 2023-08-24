@@ -11,12 +11,14 @@ datasource db {
 }
 
 model User {
-    id        Int      @id @default(autoincrement())
-    username  String   @unique
-    password  String
-    nickname  String?  @unique
-    role      String   @default("user")
-    isActive  Boolean  @default(true)
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    id                    Int       @id @default(autoincrement())
+    provider              String
+    providerId            String    @unique
+    email                 String    @unique
+    nickname              String?   @unique
+    role                  String    @default("user")
+    isActive              Boolean   @default(true)
+    createdAt             DateTime  @default(now())
+    hashedRefreshToken    String?   @unique
+    refreshTokenExpiresAt DateTime?
 }

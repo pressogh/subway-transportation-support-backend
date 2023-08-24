@@ -11,10 +11,13 @@ export class UserEntity implements User {
 	id: number;
 
 	@ApiProperty()
-	username: string;
+	email: string;
 
-	@Exclude()
-	password: string;
+	@ApiProperty()
+	provider: string;
+
+	@ApiProperty()
+	providerId: string;
 
 	@ApiProperty()
 	nickname: string | null;
@@ -30,4 +33,10 @@ export class UserEntity implements User {
 
 	@ApiProperty()
 	isActive: boolean;
+
+	@Exclude()
+	hashedRefreshToken: string | null;
+
+	@Exclude()
+	refreshTokenExpiresAt: Date | null;
 }

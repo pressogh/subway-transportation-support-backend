@@ -1,16 +1,52 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import {
+	IsBoolean,
+	IsDate,
+	IsEmail,
+	IsNotEmpty,
+	IsString,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserDto {
-	@IsString()
 	@IsNotEmpty()
 	@IsEmail()
 	@ApiProperty()
-	username: string;
+	email: string;
+
+	@IsNotEmpty()
+	@IsString()
+	@ApiProperty()
+	provider: string;
+
+	@IsNotEmpty()
+	@IsString()
+	@ApiProperty()
+	providerId: string;
+
+	@IsString()
+	@ApiProperty()
+	nickname: string;
 
 	@IsString()
 	@IsNotEmpty()
-	@MinLength(8)
 	@ApiProperty()
-	password: string;
+	role: string;
+
+	@IsBoolean()
+	@IsNotEmpty()
+	@ApiProperty()
+	isActive: boolean;
+
+	@IsDate()
+	@IsNotEmpty()
+	@ApiProperty()
+	createdAt: Date;
+
+	@IsString()
+	@ApiProperty()
+	hashedRefreshToken: string;
+
+	@IsDate()
+	@ApiProperty()
+	refreshTokenExpiresAt: Date;
 }
