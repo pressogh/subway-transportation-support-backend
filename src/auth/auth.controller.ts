@@ -17,6 +17,7 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 
 import dayjs from '../etc/dayjs';
 import { KakaoGuard } from './kakao.guard';
+import { JwtGuard } from './jwt.guard';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -62,10 +63,16 @@ export class AuthController {
 
 		await this.userService.update(user.id, updateDto);
 
-		res.cookie('accessToken', accessToken);
-		res.cookie('refreshToken', refreshToken);
+		res.cookie('accessToken', accessToken, {
+			httpOnly: true,
+			maxAge: 7200 * 1000,
+		});
+		res.cookie('refreshToken', refreshToken, {
+			httpOnly: true,
+			maxAge: 604800 * 1000,
+		});
 
-		res.redirect(this.configService.get('DOMAIN'));
+		res.redirect(this.configService.get('FRONTEND_URL'));
 	}
 
 	@Get('kakao/login')
@@ -103,28 +110,45 @@ export class AuthController {
 
 		await this.userService.update(user.id, updateDto);
 
-		res.cookie('accessToken', accessToken);
-		res.cookie('refreshToken', refreshToken);
+		res.cookie('accessToken', accessToken, {
+			httpOnly: true,
+			maxAge: 7200 * 1000,
+		});
+		res.cookie('refreshToken', refreshToken, {
+			httpOnly: true,
+			maxAge: 604800 * 1000,
+		});
 
-		res.redirect(this.configService.get('DOMAIN'));
+		res.redirect(this.configService.get('FRONTEND_URL'));
 	}
 
 	@Post('refresh')
 	@ApiCookieAuth()
-	async refresh(@Req() req: Request, @Res() res: Response) {
+	async refresh(
+		@Req() req: Request,
+		@Res({ passthrough: true }) res: Response,
+	) {
 		const { refreshToken } = req.cookies;
 
 		const user = await this.userService.findByRefreshToken(refreshToken);
 
 		if (!user) throw new UnauthorizedException();
 
-		if (dayjs(user.refreshTokenExpiresAt).isBefore(dayjs().tz().format())) {
+		if (dayjs(user.refreshTokenExpiresAt).isBefore(dayjs().tz())) {
 			throw new UnauthorizedException();
 		}
 
 		const accessToken = await this.authService.generateAccessToken(user);
 
-		res.cookie('accessToken', accessToken);
+		res.cookie('accessToken', accessToken, {
+			httpOnly: true,
+			maxAge: 7200 * 1000,
+		});
+
 		res.send({ accessToken });
 	}
+
+	@Get('check')
+	@UseGuards(JwtGuard)
+	async check(@Req() req: Request) {}
 }
