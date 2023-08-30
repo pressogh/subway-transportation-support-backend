@@ -8,7 +8,12 @@ import {
 	UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiCookieAuth, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
+import {
+	ApiBearerAuth,
+	ApiCookieAuth,
+	ApiCreatedResponse,
+	ApiTags,
+} from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { GoogleOauthGuard } from './google-oauth.guard';
 import { ConfigService } from '@nestjs/config';
@@ -66,13 +71,17 @@ export class AuthController {
 		res.cookie('accessToken', accessToken, {
 			httpOnly: true,
 			maxAge: 7200 * 1000,
+			secure: true,
+			sameSite: 'lax',
 		});
 		res.cookie('refreshToken', refreshToken, {
 			httpOnly: true,
 			maxAge: 604800 * 1000,
+			secure: true,
+			sameSite: 'lax',
 		});
 
-		res.redirect(this.configService.get('FRONTEND_URL'));
+		res.redirect(`${this.configService.get('FRONTEND_URL')}/common`);
 	}
 
 	@Get('kakao/login')
@@ -113,17 +122,21 @@ export class AuthController {
 		res.cookie('accessToken', accessToken, {
 			httpOnly: true,
 			maxAge: 7200 * 1000,
+			secure: true,
+			sameSite: 'lax',
 		});
 		res.cookie('refreshToken', refreshToken, {
 			httpOnly: true,
 			maxAge: 604800 * 1000,
+			secure: true,
+			sameSite: 'lax',
 		});
 
-		res.redirect(this.configService.get('FRONTEND_URL'));
+		res.redirect(`${this.configService.get('FRONTEND_URL')}/common`);
 	}
 
 	@Post('refresh')
-	@ApiCookieAuth()
+	@ApiBearerAuth()
 	async refresh(
 		@Req() req: Request,
 		@Res({ passthrough: true }) res: Response,
@@ -143,12 +156,30 @@ export class AuthController {
 		res.cookie('accessToken', accessToken, {
 			httpOnly: true,
 			maxAge: 7200 * 1000,
+			secure: true,
+			sameSite: 'lax',
 		});
 
 		res.send({ accessToken });
 	}
 
-	@Get('check')
+	@Post('check')
 	@UseGuards(JwtGuard)
 	async check(@Req() req: Request) {}
+
+	@Post('logout')
+	@UseGuards(JwtGuard)
+	@ApiBearerAuth()
+	async logout(
+		@Req() req: Request,
+		@Res({ passthrough: true }) res: Response,
+	) {
+		const user = req.user;
+		await this.userService.clearRefreshToken(user.id);
+
+		res.clearCookie('accessToken');
+		res.clearCookie('refreshToken');
+
+		res.send({ message: '로그아웃 되었습니다.' });
+	}
 }
